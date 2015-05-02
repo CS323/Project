@@ -1,0 +1,65 @@
+parser.l  code fragments
+.
+.
+.
+"PROGRAM"       return PROGRAM;
+.
+.
+.
+
+[-+=\;\*/()\',:]	{return yytext[0];}
+[ \t\n]           ;
+\(\*[^\*\)]*\*\)	/*ignore comments*/;
+
+.
+.
+.
+program stuff....
+
+*****************************************************************************
+
+
+
+parser.y code fragments
+.
+.
+// Productions																	Actions
+
+start			: PROGRAM pname {strcpy(output_string,$2); open_out_file(output_string); } ';' {print_header();} declaration  main_program
+					| pname ';'  {yyerror("PROGRAM is expected");} VAR dec_list ';' BEGIN_PROGRAM stat_list END					
+					;
+
+dec 			: identifier ',' dec  		{$$ = $1; strcat($$, ", "); strcat($$, $3);}
+					| identifier  dec 				{yyerror(", is missing");}
+					| identifier 							{$$ = $1;}					
+					;
+					
+expr 			: term 										{$$ = $1;}
+					| expr '+' term 					{$$ = $1;strcat($$, " + "); strcat($$, $3);}
+					| expr '-' term 					{$$ = $1;strcat($$, " - "); strcat($$, $3);}
+					;
+.
+.
+.
+.
+void check_id(char* id) {
+.
+.  stuff in here
+.
+}
+.
+.					
+void print_header() {
+  // function called when PROGRAM pname is reduced
+  if (!out_file) { 
+		open_out_file(out_file_name);
+  }
+
+  fprintf(logfile, "Printing header ... \n");
+	fprintf(out_file, "%s\n", "#include <iostream>");
+	fprintf(out_file, "%s\n", "using namespace std;");
+	fprintf(out_file, "%s\n", "int main() {");
+}
+.
+.
+.
