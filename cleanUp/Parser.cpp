@@ -21,82 +21,99 @@ public:
 		{
 			lexer.getTokLex();
             std::cout << "PROGRAM ";
-            if (lexer.token == "identifier"){
-                std::cout << lexer.lexeme;
-                while (lexer.lexeme != ";"){
-                    lexer.getTokLex();
-                    std::cout << lexer.lexeme;
-                }
+            if (pName()){
                 std::cout << std::endl;
                 lexer.getTokLex();
                 if (lexer.lexeme == "VAR"){
-                    std::cout << lexer.lexeme;
+                    std::cout << "VAR";
                     std::cout << std::endl;
-                    lexer.getTokLex();
-                    while (lexer.lexeme != ";"){
-                        if (lexer.token == "identifier"){
-                            std::cout<<lexer.lexeme;
-                            lexer.getTokLex();
-                        } else if(lexer.lexeme == ","){
-                            std::cout<<lexer.lexeme << " ";
-                            lexer.getTokLex();
-                        }else if (lexer.lexeme == ":"){
-                            std::cout<< " " <<lexer.lexeme << " ";
-                            lexer.getTokLex();
-                        }else if(lexer.lexeme == "INTEGER"){
-                            std:: cout <<lexer.lexeme;
-                            lexer.getTokLex();
-                        }
-                    }
-                    std::cout << lexer.lexeme;
-                    lexer.getTokLex();
+                    if (decList()) {
                         if(lexer.lexeme == "BEGIN")
                         {
-                            lexer.getTokLex();
+                            statList();
                             if(lexer.lexeme == "END")
                             {
+                                if (lexer.lexeme == "."){
+                                    std::cout << "end of program";
+                                }else{
+                                    std::cout<< "Missing '.'";
+                                }
                                 
                             }
                             else{std::cout << "Expected 'END'"; exit(0);}
                         }
+                    }else{
+                        std::cout << "Expected Variables";
+                    }
                 }
             }else {
-                std::cout << "missing program name";
+                std::cout << "Missing program name";
             }
 		}
 		else{ std::cout << "Expected 'PROGRAM'"; exit(0); }
 	}
     
-    void pName(){
-        
+    bool pName(){
+        if (lexer.token == "identifier"){
+        std::cout << lexer.lexeme;
+        while (lexer.lexeme != ";"){
+            lexer.getTokLex();
+            std::cout << lexer.lexeme;
+        }
+            return true;
+        }else{
+            return false;
+        }
     }
     
-    void id(){
-        
-    }
-    
-    void decList(){
-        
+    bool decList(){
+        lexer.getTokLex();
+        while (lexer.lexeme != ":"){
+            dec();
+            lexer.getTokLex();
+        }
+        std::cout << " " << lexer.lexeme << " ";
+        lexer.getTokLex();
+        if (type()){
+            return true;
+        }else {
+            return false;
+        }
     }
     
     void dec(){
-        
+            if (lexer.token == "identifier"){
+                std::cout<<lexer.lexeme;
+            } else if(lexer.lexeme == ","){
+                std::cout<<lexer.lexeme << " ";
+            }
     }
     
     void statList() {
-        
+        while (lexer.lexeme != "END") {
+            lexer.getTokLex();
+            stat();
+        }
     }
     
     void stat() {
-        
+        if (lexer.token == "identifier"){
+            assign();
+        }else if (lexer.lexeme == "PRINT"){
+            print();
+        }
     }
     
     void print() {
-        
+        std::cout << "PRINT";
+        while(lexer.lexeme != ";"){
+            output();
+            lexer.getTokLex();
+        }
     }
     
     void output() {
-        
+        std::cout<<lexer.lexeme;
     }
     
     void assign() {
@@ -119,17 +136,23 @@ public:
         
     }
     
-    void type() {
+    bool type() {
+        if(lexer.lexeme == "INTEGER"){
+            std:: cout <<lexer.lexeme;
+            lexer.getTokLex();
+            if (lexer.lexeme == ";") {
+                std::cout<<lexer.lexeme;
+                std::cout << std::endl;
+                return true;
+            }else{
+                std::cout<<"Missing ';'";
+                return false;
+            }
+        }else {
+            std::cout << " missing type " << std::endl;
+            return false;
+        }
         
     }
-    
-    void digit() {
-        
-    }
-    
-    void letter() {
-        
-    }
-    
     
 };
