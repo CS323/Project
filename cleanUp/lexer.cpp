@@ -149,6 +149,11 @@ public:
 			else token = "operator";
 			fin.get(ch);
 		}
+        else if (ch == '\"'){
+            lexeme = lexeme + ch;
+            token = "quote";
+            fin.get(ch);
+        }
 	}
 };
 

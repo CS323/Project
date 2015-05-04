@@ -3,38 +3,65 @@
 #include <fstream>
 #include <vector>
 #include "lexer.cpp"
+#include <list>
 
 class Parser
 {
 public:
 	static std::string s;
     std::string a = "filename.txt";
+    std::list<std::string>lines;
+    std::string tempString = "";
+    std::string cppFile = "";
 	Lexer lexer;
 	Parser()
 	{
 		lexer.setFile(a);
 		lexer.getTokLex();//get first tok/lex
+        //Start making the cpp file
+        lines.push_back("#include <iostream>");
+        lines.push_back("using namespace std;");
 	}
+    
 	void Program()
 	{
 		if(lexer.lexeme == "PROGRAM")
 		{
+            lines.push_back("int main(){");
 			lexer.getTokLex();
-            std::cout << "PROGRAM ";
             if (pName()){
-                std::cout << std::endl;
                 lexer.getTokLex();
                 if (lexer.lexeme == "VAR"){
-                    std::cout << "VAR";
-                    std::cout << std::endl;
-                    if (decList()) {
+                    decList();
+                    if (lexer.lexeme == ";"){
+                        lexer.getTokLex();
+                    }else{
+                        std::cout << "Missing ';'";
+                    }
                         if(lexer.lexeme == "BEGIN")
                         {
-                            statList();
+                            lexer.getTokLex();
+                            while (lexer.lexeme != "END") {
+                                statList();
+                                lexer.getTokLex();
+                            }
                             if(lexer.lexeme == "END")
                             {
+                                lines.push_back("return 0;");
+                                lexer.getTokLex();
                                 if (lexer.lexeme == "."){
-                                    std::cout << "end of program";
+                                    lines.push_back("}");
+                                    std::list<std::string>::iterator it;
+                                    std::ofstream myfile (cppFile);
+                                    for(it = lines.begin(); it !=lines.end(); it++ ){
+                                        if(myfile.is_open()){
+                                            myfile << *it << std::endl;
+                                        } else{
+                                            std::cout << "Unable to open file";
+                                        }
+                                    }
+                                    myfile.close();
+                                    
                                 }else{
                                     std::cout<< "Missing '.'";
                                 }
@@ -42,9 +69,6 @@ public:
                             }
                             else{std::cout << "Expected 'END'"; exit(0);}
                         }
-                    }else{
-                        std::cout << "Expected Variables";
-                    }
                 }
             }else {
                 std::cout << "Missing program name";
@@ -55,10 +79,9 @@ public:
     
     bool pName(){
         if (lexer.token == "identifier"){
-        std::cout << lexer.lexeme;
+            cppFile = lexer.lexeme + ".cpp";
         while (lexer.lexeme != ";"){
             lexer.getTokLex();
-            std::cout << lexer.lexeme;
         }
             return true;
         }else{
@@ -66,88 +89,119 @@ public:
         }
     }
     
-    bool decList(){
+    void decList(){
         lexer.getTokLex();
         while (lexer.lexeme != ":"){
             dec();
             lexer.getTokLex();
         }
-        std::cout << " " << lexer.lexeme << " ";
         lexer.getTokLex();
         if (type()){
-            return true;
+            lexer.getTokLex();
         }else {
-            return false;
+            std::cout<<"Missing Type";
         }
     }
     
     void dec(){
-            if (lexer.token == "identifier"){
-                std::cout<<lexer.lexeme;
-            } else if(lexer.lexeme == ","){
-                std::cout<<lexer.lexeme << " ";
-            }
+        if (lexer.token == "identifier"){
+            tempString = tempString + lexer.lexeme;
+        } else if(lexer.lexeme == ","){
+            tempString = tempString + lexer.lexeme;
+        }
     }
     
     void statList() {
-        while (lexer.lexeme != "END") {
-            lexer.getTokLex();
-            stat();
-        }
+        stat();
     }
     
     void stat() {
         if (lexer.token == "identifier"){
             assign();
-        }else if (lexer.lexeme == "PRINT"){
+        } else if (lexer.lexeme == "PRINT"){
             print();
         }
+        
     }
     
     void print() {
-        std::cout << "PRINT";
-        while(lexer.lexeme != ";"){
-            output();
+        tempString = "";
+        tempString = tempString + "cout ";
+        lexer.getTokLex();
+        if (lexer.lexeme == "("){
+            tempString = tempString + "<< ";
             lexer.getTokLex();
+            output();
+        }else {
+            std::cout << "Missing '('";
+        }
+        lexer.getTokLex();
+        if (lexer.lexeme == ";"){
+            tempString = tempString + lexer.lexeme;
+            lines.push_back(tempString);
+        }else{
+            std::cout << "Missing ';'";
         }
     }
     
     void output() {
-        std::cout<<lexer.lexeme;
+        tempString = tempString + lexer.lexeme;
+        lexer.getTokLex();
+        while (lexer.lexeme != ")") {
+            if (lexer.lexeme == ","){
+                tempString = tempString + " << ";
+            }else{
+                tempString = tempString + lexer.lexeme;
+            }
+            lexer.getTokLex();
+        }
     }
     
     void assign() {
-        
+        tempString = "";
+        tempString = tempString + lexer.lexeme;
+        lexer.getTokLex();
+        if (lexer.lexeme == "="){
+            tempString = tempString + " " + lexer.lexeme + " ";
+            lexer.getTokLex();
+            expr();
+        }else{
+            std::cout << "Missing '='";
+        }
     }
     
     void expr() {
-        
+        std::string temp = lexer.lexeme;
+        lexer.getTokLex();
+        if (lexer.lexeme == ";") {
+            tempString = tempString + temp + lexer.lexeme;
+            lines.push_back(tempString);
+        } else if (lexer.token == "operator"){
+            tempString = tempString + temp + " " + lexer.lexeme + " ";
+            term();
+        }
     }
     
     void term() {
-        
+        lexer.getTokLex();
+        expr();
     }
     
-    void factor() {
-        
-    }
-    
-    void number() {
-        
+    void factor(std::string temp) {
+        if (temp == "identifier"){
+            tempString = tempString + temp + lexer.lexeme;
+        }else if (temp == "int"){
+            tempString = tempString + temp + lexer.lexeme;
+        }else if (temp == "<"){
+            tempString = tempString + temp;
+            expr();
+        }
     }
     
     bool type() {
         if(lexer.lexeme == "INTEGER"){
-            std:: cout <<lexer.lexeme;
-            lexer.getTokLex();
-            if (lexer.lexeme == ";") {
-                std::cout<<lexer.lexeme;
-                std::cout << std::endl;
-                return true;
-            }else{
-                std::cout<<"Missing ';'";
-                return false;
-            }
+            lines.push_back("int " + tempString + ";");
+            return true;
         }else {
             std::cout << " missing type " << std::endl;
             return false;

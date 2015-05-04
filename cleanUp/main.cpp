@@ -36,6 +36,7 @@ int main(int argc, const char * argv[]) {
     removeSpaces(lines);
     lines.remove_if(empty_line);
     displayList(lines);
+    cout << endl << endl;
     Parser myparser;
     myparser.Program();
     
