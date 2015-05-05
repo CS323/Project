@@ -81,7 +81,14 @@ public:
                 if(std::find(keywords.begin(),keywords.end(),lexeme) != keywords.end()){
 					token = "keyword";
                 } else{
-                    token = "identifier";
+                    for (int i = 0; i < lexeme.length(); i++){
+                        if ((lexeme[i] >= 48 && lexeme[i] <= 57) || (lexeme[i] >= 97 && lexeme[i] <= 102)){
+                                token = "identifier";
+                        }else{
+                            token = "invalid identifier";
+                            break;
+                        }
+                    }
                 }
 				//if lexeme in keywordlist token = keyword
 				//else token = identifier

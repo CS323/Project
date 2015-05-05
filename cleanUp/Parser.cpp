@@ -108,6 +108,8 @@ public:
             tempString = tempString + lexer.lexeme;
         } else if(lexer.lexeme == ","){
             tempString = tempString + lexer.lexeme;
+        } else {
+            std::cout << "ERROR";
         }
     }
     
